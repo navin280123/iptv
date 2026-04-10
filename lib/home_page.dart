@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'player_screen.dart';
+import 'channel_card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,15 +13,15 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   List<dynamic> _allChannels = [];
   List<dynamic> _filteredChannels = [];
-  
+
   List<String> _categories = ['All'];
   List<String> _languages = ['All'];
   List<String> _countries = ['All'];
-  
+
   String _selectedCategory = 'All';
   String _selectedLanguage = 'All';
   String _selectedCountry = 'All';
-  
+
   bool _isLoading = true;
   String _errorMessage = '';
   bool _isSearching = false;
@@ -41,8 +41,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _fadeController = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
-    _fadeAnimation = CurvedAnimation(parent: _fadeController, curve: Curves.easeIn);
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeIn,
+    );
     _fetchChannels();
     _searchController.addListener(_onSearchChanged);
   }
@@ -65,28 +71,44 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       _filteredChannels = _allChannels.where((channel) {
         final name = (channel['name'] ?? '').toString().toLowerCase();
         final cat = (channel['parsed_category'] ?? '').toString().toLowerCase();
-        final lang = (channel['parsed_language'] ?? '').toString().toLowerCase();
-        final country = (channel['parsed_country'] ?? '').toString().toLowerCase();
+        final lang = (channel['parsed_language'] ?? '')
+            .toString()
+            .toLowerCase();
+        final country = (channel['parsed_country'] ?? '')
+            .toString()
+            .toLowerCase();
 
-        final matchesSearch = query.isEmpty || name.contains(query) || cat.contains(query);
-        final matchesCategory = _selectedCategory == 'All' || cat == _selectedCategory.toLowerCase();
-        final matchesLanguage = _selectedLanguage == 'All' || lang == _selectedLanguage.toLowerCase();
-        final matchesCountry = _selectedCountry == 'All' || country == _selectedCountry.toLowerCase();
+        final matchesSearch =
+            query.isEmpty || name.contains(query) || cat.contains(query);
+        final matchesCategory =
+            _selectedCategory == 'All' ||
+            cat == _selectedCategory.toLowerCase();
+        final matchesLanguage =
+            _selectedLanguage == 'All' ||
+            lang == _selectedLanguage.toLowerCase();
+        final matchesCountry =
+            _selectedCountry == 'All' ||
+            country == _selectedCountry.toLowerCase();
 
-        return matchesSearch && matchesCategory && matchesLanguage && matchesCountry;
+        return matchesSearch &&
+            matchesCategory &&
+            matchesLanguage &&
+            matchesCountry;
       }).toList();
     });
   }
 
   String _extractCategory(dynamic channel) {
-    if (channel['categories'] is List && (channel['categories'] as List).isNotEmpty) {
+    if (channel['categories'] is List &&
+        (channel['categories'] as List).isNotEmpty) {
       return (channel['categories'] as List).first.toString();
     }
     return channel['category']?.toString() ?? 'general';
   }
 
   String _extractLanguage(dynamic channel) {
-    if (channel['languages'] is List && (channel['languages'] as List).isNotEmpty) {
+    if (channel['languages'] is List &&
+        (channel['languages'] as List).isNotEmpty) {
       return (channel['languages'] as List).first.toString();
     }
     return channel['language']?.toString() ?? 'unknown';
@@ -102,10 +124,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       _errorMessage = '';
     });
     try {
-      final channelsResponse = await http.get(Uri.parse('https://iptv-org.github.io/api/channels.json'));
-      final streamsResponse = await http.get(Uri.parse('https://iptv-org.github.io/api/streams.json'));
+      final channelsResponse = await http.get(
+        Uri.parse('https://iptv-org.github.io/api/channels.json'),
+      );
+      final streamsResponse = await http.get(
+        Uri.parse('https://iptv-org.github.io/api/streams.json'),
+      );
 
-      if (channelsResponse.statusCode == 200 && streamsResponse.statusCode == 200) {
+      if (channelsResponse.statusCode == 200 &&
+          streamsResponse.statusCode == 200) {
         final List<dynamic> channelsData = json.decode(channelsResponse.body);
         final List<dynamic> streamsData = json.decode(streamsResponse.body);
 
@@ -122,9 +149,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         Set<String> countries = {};
 
         for (var channel in channelsData) {
-          if (channel['id'] != null && channelStreams.containsKey(channel['id'])) {
+          if (channel['id'] != null &&
+              channelStreams.containsKey(channel['id'])) {
             channel['stream_url'] = channelStreams[channel['id']];
-            
+
             final cat = _extractCategory(channel);
             final lang = _extractLanguage(channel);
             final country = _extractCountry(channel);
@@ -132,11 +160,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             channel['parsed_category'] = cat;
             channel['parsed_language'] = lang;
             channel['parsed_country'] = country;
-            
+
             cats.add(cat);
             langs.add(lang);
             countries.add(country);
-            
+
             activeChannels.add(channel);
           }
         }
@@ -151,7 +179,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           _categories = ['All', ...sortedCats];
           _languages = ['All', ...sortedLangs];
           _countries = ['All', ...sortedCountries];
-          
+
           _selectedCategory = 'All';
           _selectedLanguage = 'All';
           _selectedCountry = 'All';
@@ -205,7 +233,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.live_tv_rounded, color: Colors.white, size: 22),
+            child: const Icon(
+              Icons.live_tv_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
           ),
           const SizedBox(width: 12),
           Column(
@@ -246,7 +278,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           color: _surfaceColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: _isSearching ? _accentColor.withOpacity(0.6) : Colors.transparent,
+            color: _isSearching
+                ? _accentColor.withOpacity(0.6)
+                : Colors.transparent,
             width: 1.5,
           ),
         ),
@@ -259,10 +293,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           decoration: InputDecoration(
             hintText: 'Search channels or categories...',
             hintStyle: const TextStyle(color: _textSecondary, fontSize: 14),
-            prefixIcon: const Icon(Icons.search_rounded, color: _textSecondary, size: 22),
+            prefixIcon: const Icon(
+              Icons.search_rounded,
+              color: _textSecondary,
+              size: 22,
+            ),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.close_rounded, color: _textSecondary, size: 20),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: _textSecondary,
+                      size: 20,
+                    ),
                     onPressed: () {
                       _searchController.clear();
                       setState(() => _isSearching = false);
@@ -270,7 +312,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   )
                 : null,
             border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
           ),
         ),
       ),
@@ -302,29 +347,41 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildDropdown(String label, List<String> items, String selectedValue, ValueChanged<String?> onChanged) {
+  Widget _buildDropdown(
+    String label,
+    List<String> items,
+    String selectedValue,
+    ValueChanged<String?> onChanged,
+  ) {
     return Container(
       height: 38,
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: selectedValue == 'All' ? _surfaceColor : _accentColor.withOpacity(0.2),
+        color: selectedValue == 'All'
+            ? _surfaceColor
+            : _accentColor.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: selectedValue == 'All' ? Colors.transparent : _accentColor.withOpacity(0.5),
+          color: selectedValue == 'All'
+              ? Colors.transparent
+              : _accentColor.withOpacity(0.5),
         ),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: selectedValue,
           dropdownColor: _surfaceColor,
-          icon: Icon(Icons.keyboard_arrow_down_rounded, 
-            color: selectedValue == 'All' ? _textSecondary : _accentLight, 
-            size: 20
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: selectedValue == 'All' ? _textSecondary : _accentLight,
+            size: 20,
           ),
           style: TextStyle(
-            color: selectedValue == 'All' ? _textSecondary : _textPrimary, 
-            fontSize: 13, 
-            fontWeight: selectedValue == 'All' ? FontWeight.normal : FontWeight.w600
+            color: selectedValue == 'All' ? _textSecondary : _textPrimary,
+            fontSize: 13,
+            fontWeight: selectedValue == 'All'
+                ? FontWeight.normal
+                : FontWeight.w600,
           ),
           items: items.map((item) {
             return DropdownMenuItem<String>(
@@ -354,7 +411,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
             ),
             const SizedBox(height: 16),
-            const Text('Loading channels...', style: TextStyle(color: _textSecondary, fontSize: 14)),
+            const Text(
+              'Loading channels...',
+              style: TextStyle(color: _textSecondary, fontSize: 14),
+            ),
           ],
         ),
       );
@@ -367,11 +427,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.signal_wifi_bad_rounded, color: _textSecondary, size: 56),
+              const Icon(
+                Icons.signal_wifi_bad_rounded,
+                color: _textSecondary,
+                size: 56,
+              ),
               const SizedBox(height: 16),
-              const Text('Unable to load channels', style: TextStyle(color: _textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                'Unable to load channels',
+                style: TextStyle(
+                  color: _textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 8),
-              Text(_errorMessage, style: const TextStyle(color: _textSecondary, fontSize: 13), textAlign: TextAlign.center),
+              Text(
+                _errorMessage,
+                style: const TextStyle(color: _textSecondary, fontSize: 13),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: _fetchChannels,
@@ -380,8 +455,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _accentColor,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ],
@@ -397,9 +477,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           children: [
             Icon(Icons.search_off_rounded, color: _textSecondary, size: 52),
             SizedBox(height: 12),
-            Text('No channels found', style: TextStyle(color: _textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              'No channels found',
+              style: TextStyle(
+                color: _textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             SizedBox(height: 6),
-            Text('Try a different search or filter', style: TextStyle(color: _textSecondary, fontSize: 13)),
+            Text(
+              'Try a different search or filter',
+              style: TextStyle(color: _textSecondary, fontSize: 13),
+            ),
           ],
         ),
       );
@@ -407,156 +497,46 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-        itemCount: _filteredChannels.length,
-        itemBuilder: (context, index) => _buildChannelCard(_filteredChannels[index]),
-      ),
-    );
-  }
-
-  Widget _buildChannelCard(dynamic channel) {
-    final name = channel['name'] ?? 'Unknown Channel';
-    final category = channel['parsed_category'] ?? 'general';
-    final language = channel['parsed_language'] ?? 'unknown';
-    final country = channel['parsed_country'] ?? 'unknown';
-    final logo = channel['logo']?.toString() ?? '';
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PlayerScreen(
-              channelName: name,
-              streamUrl: channel['stream_url'],
-            ),
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        decoration: BoxDecoration(
-          color: _cardColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              splashColor: _accentColor.withOpacity(0.15),
-              highlightColor: _accentColor.withOpacity(0.05),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PlayerScreen(
-                      channelName: name,
-                      streamUrl: channel['stream_url'],
-                    ),
-                  ),
-                );
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                child: Row(
-                  children: [
-                    // Logo / avatar
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: _surfaceColor,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: logo.isNotEmpty
-                          ? Image.network(
-                              logo,
-                              fit: BoxFit.contain,
-                              errorBuilder: (_, __, ___) => _fallbackIcon(),
-                            )
-                          : _fallbackIcon(),
-                    ),
-                    const SizedBox(width: 14),
-                    // Info
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name,
-                            style: const TextStyle(
-                              color: _textPrimary,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 6),
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                _buildBadge(category.toUpperCase(), _accentColor.withOpacity(0.15), _accentLight),
-                                const SizedBox(width: 6),
-                                if (language != 'unknown') ...[
-                                  _buildBadge(language.toUpperCase(), Colors.blue.withOpacity(0.15), Colors.blue[300]!),
-                                  const SizedBox(width: 6),
-                                ],
-                                if (country != 'unknown')
-                                  _buildBadge(country.toUpperCase(), Colors.green.withOpacity(0.15), Colors.green[300]!),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // Play button
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [_accentColor, Color(0xFF3F51B5)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 22),
-                    ),
-                  ],
-                ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth > 600) {
+            return GridView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 240,
+                childAspectRatio: 0.85,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
               ),
+              itemCount: _filteredChannels.length,
+              itemBuilder: (context, index) => ChannelCard(
+                channel: _filteredChannels[index],
+                isGrid: true,
+                cardColor: _cardColor,
+                surfaceColor: _surfaceColor,
+                accentColor: _accentColor,
+                accentLight: _accentLight,
+                textPrimary: _textPrimary,
+                textSecondary: _textSecondary,
+              ),
+            );
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+            itemCount: _filteredChannels.length,
+            itemBuilder: (context, index) => ChannelCard(
+              channel: _filteredChannels[index],
+              isGrid: false,
+              cardColor: _cardColor,
+              surfaceColor: _surfaceColor,
+              accentColor: _accentColor,
+              accentLight: _accentLight,
+              textPrimary: _textPrimary,
+              textSecondary: _textSecondary,
             ),
-          ),
-        ),
+          );
+        },
       ),
-    );
-  }
-
-  Widget _buildBadge(String text, Color bgColor, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(color: textColor, fontSize: 10, fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-
-  Widget _fallbackIcon() {
-    return const Center(
-      child: Icon(Icons.live_tv_rounded, color: _textSecondary, size: 28),
     );
   }
 }
