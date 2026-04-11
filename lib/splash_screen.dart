@@ -27,10 +27,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFF28313B),
       body: Center(
         child: Lottie.asset(
           'assets/lottie/logo.json',
+          width: 200,
+          height: 200,
           controller: _controller,
           onLoaded: (composition) {
             _controller
