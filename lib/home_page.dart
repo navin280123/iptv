@@ -511,6 +511,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               itemCount: _filteredChannels.length,
               itemBuilder: (context, index) => ChannelCard(
                 channel: _filteredChannels[index],
+                allChannels: _filteredChannels,
                 isGrid: true,
                 cardColor: _cardColor,
                 surfaceColor: _surfaceColor,
@@ -526,6 +527,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             itemCount: _filteredChannels.length,
             itemBuilder: (context, index) => ChannelCard(
               channel: _filteredChannels[index],
+              allChannels: _filteredChannels,
               isGrid: false,
               cardColor: _cardColor,
               surfaceColor: _surfaceColor,

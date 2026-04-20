@@ -6,6 +6,7 @@ import 'player_screen.dart';
 
 class ChannelCard extends StatefulWidget {
   final dynamic channel;
+  final List<dynamic> allChannels;
   final bool isGrid;
   final Color cardColor;
   final Color surfaceColor;
@@ -13,10 +14,12 @@ class ChannelCard extends StatefulWidget {
   final Color accentLight;
   final Color textPrimary;
   final Color textSecondary;
+  final VoidCallback? onTap;
 
   const ChannelCard({
     super.key,
     required this.channel,
+    required this.allChannels,
     required this.isGrid,
     required this.cardColor,
     required this.surfaceColor,
@@ -24,6 +27,7 @@ class ChannelCard extends StatefulWidget {
     required this.accentLight,
     required this.textPrimary,
     required this.textSecondary,
+    this.onTap,
   });
 
   @override
@@ -239,13 +243,14 @@ class _ChannelCardState extends State<ChannelCard> {
           child: InkWell(
             splashColor: widget.accentColor.withOpacity(0.15),
             highlightColor: widget.accentColor.withOpacity(0.05),
-            onTap: () {
+            onTap: widget.onTap ?? () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => PlayerScreen(
                     channelName: name,
                     streamUrl: widget.channel['stream_url'],
+                    allChannels: widget.allChannels,
                   ),
                 ),
               );
@@ -332,13 +337,14 @@ class _ChannelCardState extends State<ChannelCard> {
           child: InkWell(
             splashColor: widget.accentColor.withOpacity(0.15),
             highlightColor: widget.accentColor.withOpacity(0.05),
-            onTap: () {
+            onTap: widget.onTap ?? () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => PlayerScreen(
                     channelName: name,
                     streamUrl: widget.channel['stream_url'],
+                    allChannels: widget.allChannels,
                   ),
                 ),
               );

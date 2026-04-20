@@ -5,15 +5,18 @@ import 'package:media_kit_video/media_kit_video.dart';
 import 'package:simple_pip_mode/pip_widget.dart';
 import 'package:simple_pip_mode/simple_pip.dart';
 import 'package:window_manager/window_manager.dart';
+import 'channel_card.dart';
 
 class PlayerScreen extends StatefulWidget {
   final String channelName;
   final String streamUrl;
+  final List<dynamic> allChannels;
 
   const PlayerScreen({
     super.key,
     required this.channelName,
     required this.streamUrl,
+    required this.allChannels,
   });
 
   @override
@@ -28,9 +31,15 @@ class _PlayerScreenState extends State<PlayerScreen> with WindowListener {
   Offset? _previousPosition;
   String? _errorMessage;
 
+  late String _currentChannelName;
+  late String _currentStreamUrl;
+
   @override
   void initState() {
     super.initState();
+    _currentChannelName = widget.channelName;
+    _currentStreamUrl = widget.streamUrl;
+
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       windowManager.addListener(this);
     }
@@ -40,7 +49,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WindowListener {
       ),
     );
     controller = VideoController(player);
-    player.open(Media(widget.streamUrl));
+    player.open(Media(_currentStreamUrl));
     
     player.stream.error.listen((error) {
       if (mounted) {
@@ -69,6 +78,15 @@ class _PlayerScreenState extends State<PlayerScreen> with WindowListener {
     }
     player.dispose();
     super.dispose();
+  }
+
+  void _switchChannel(dynamic ch) {
+    setState(() {
+      _currentChannelName = ch['name'] ?? 'Unknown Channel';
+      _currentStreamUrl = ch['stream_url'];
+      _errorMessage = null;
+    });
+    player.open(Media(_currentStreamUrl));
   }
 
   Future<void> _toggleWindowsPip() async {
@@ -105,17 +123,19 @@ class _PlayerScreenState extends State<PlayerScreen> with WindowListener {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline, color: Colors.red, size: 64),
+                const Icon(Icons.error_outline, color: Colors.red, size: 48),
                 const SizedBox(height: 16),
                 const Text(
                   'Unable to play stream',
-                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   _errorMessage!,
-                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                  style: const TextStyle(color: Colors.grey, fontSize: 13),
                   textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -149,9 +169,9 @@ class _PlayerScreenState extends State<PlayerScreen> with WindowListener {
     }
 
     Widget scaffold = Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF0D0D14),
       appBar: AppBar(
-        title: Text(widget.channelName),
+        title: Text(_currentChannelName),
         backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
         titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
@@ -169,8 +189,41 @@ class _PlayerScreenState extends State<PlayerScreen> with WindowListener {
         ],
       ),
       body: SafeArea(
-        child: Center(
-          child: videoWidget,
+        child: Column(
+          children: [
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Container(
+                color: Colors.black,
+                child: videoWidget,
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                itemCount: widget.allChannels.length,
+                itemBuilder: (context, index) {
+                  final ch = widget.allChannels[index];
+                  if ((ch['name'] ?? '') == _currentChannelName) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return ChannelCard(
+                    channel: ch,
+                    allChannels: widget.allChannels,
+                    isGrid: false,
+                    cardColor: const Color(0xFF16213E),
+                    surfaceColor: const Color(0xFF1A1A2E),
+                    accentColor: const Color(0xFF9C27B0),
+                    accentLight: const Color(0xFFCE93D8),
+                    textPrimary: const Color(0xFFE8EAF6),
+                    textSecondary: const Color(0xFF7986CB),
+                    onTap: () => _switchChannel(ch),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
